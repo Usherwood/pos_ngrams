@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-"""Main class for performing ngrams analysis on a pandas_df containing a serie sof text mentions"""
+"""Main class for performing ngrams analysis on a pandas_df containing a series of text mentions"""
 
 import pandas as pd
-from pos_ngrams.n_grams import processes
 from pos_ngrams.preprocessing.preprocess import preprocess_df
+from pos_ngrams.n_grams import processes
 
 __author__ = "Peter J Usherwood"
-__python_version__ = "3.6"
+__python_version__ = "3.5"
 
 
 class NGrams():
@@ -23,12 +23,13 @@ class NGrams():
         """
 
         self.text_field_key = text_field_key
-        self.data = data
+        self.data = data.copy()
         self.cv = None
         self.ngrams_df = pd.DataFrame(['blank'], columns=['Index'])
         self.filtered_ngrams_df = pd.DataFrame(['blank'], columns=['Index'])
         self.ngram_word = None
         self.word_frequency_matrix = pd.DataFrame(['blank'], columns=['Index'])
+        self.ids_enriched = False
 
     def ngram_pipeline(self, min_gram=2, max_gram=4, preprocess_data=False,
                        language='english', additional_list=[], adhoc_stopwords=[], max_features=1000,
@@ -57,6 +58,7 @@ class NGrams():
                                       additional_list=additional_list,
                                       adhoc_stopwords=adhoc_stopwords,
                                       pos_tuples=pos_tuples)
+            self.text_field_key = 'Preprocessed'
 
         ngrams, word_frequency_matrix, cv = processes.generate_ngrams(self.data,
                                                                       min_gram,
@@ -68,6 +70,8 @@ class NGrams():
         self.ngrams_df = ngrams
         self.word_frequency_matrix = word_frequency_matrix
         self.cv = cv
+
+        self.ids_enriched = False
 
         return True
 
@@ -88,3 +92,27 @@ class NGrams():
         self.filtered_ngrams_df = self.ngrams_df[self.ngrams_df['Ngram'].str.contains(self.ngram_word)]
 
         return True
+
+    def fortify_with_id(self, filtered_df=False, take_top_x=300):
+
+        if filtered_df:
+            ngrams = processes.fortify_ngrams_with_ids(self.filtered_ngrams_df, self.word_frequency_matrix, take_top_x=take_top_x)
+            self.filtered_ngrams_df = ngrams
+            self.ngrams_df['Original Data Keys'] = ngrams['Original Data Keys']
+        else:
+            ngrams = processes.fortify_ngrams_with_ids(self.ngrams_df, self.word_frequency_matrix, take_top_x=take_top_x)
+            self.ngrams_df = ngrams
+
+        self.ids_enriched = True
+
+        return True
+
+    def aggregate_other_data_column(self, column_key_to_agg='Sentiment', new_column_key='Agg', filtered_df=False):
+
+        if self.ids_enriched:
+            for ids in self.ngrams_df['Original Data Keys']:
+                mean = self.data.ix[ids, column_key_to_agg].mean()
+
+        else:
+            print('Enrich with ids first')
+            return False

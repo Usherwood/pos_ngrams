@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-"""Functions designed to help n_grams>main run but shouldnt ever need to be called directly by the user."""
+"""Functions designed to help n_grams>main run but shouldn't ever need to be called directly by the user."""
 
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 __author__ = "Peter J Usherwood"
-__python_version__ = "3.6"
+__python_version__ = "3.5"
 
 
 def generate_ngrams(data,
@@ -66,6 +66,18 @@ def generate_ngrams(data,
     ngrams.sort_values(by=['Frequency'], ascending=False, inplace=True)
     ngrams.reset_index(drop=True, inplace=True)
     return ngrams, word_frequency_matrix, cv
+
+
+def fortify_ngrams_with_ids(ngrams, word_frequency_matrix, take_top_x=300):
+
+    if len(ngrams) < take_top_x:
+        print('Insufficient ngrams to fortify: ' + str(take_top_x) + ' Fortifying all available: ' + str(len(ngrams)))
+        take_top_x = int(len(ngrams))
+
+    for j in range(take_top_x):
+        ngrams.set_value(ngrams.index[j], 'Original Data Keys', str([i for i, e in enumerate(word_frequency_matrix.getcol(int(ngrams['Index'].iloc[j]))) if e != 0]))
+
+    return ngrams
 
 
 def create_pos_ngrams(min_gram, max_gram):
