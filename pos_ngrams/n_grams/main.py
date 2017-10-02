@@ -32,7 +32,7 @@ class NGrams():
         self.ids_enriched = False
 
     def ngram_pipeline(self, min_gram=2, max_gram=4, preprocess_data=False,
-                       language='english', additional_list=[], adhoc_stopwords=[], max_features=1000,
+                       language='english', adhoc_stopwords=[], max_features=1000,
                        tfidf=True, pos_tuples=False):
         """
         The primary function that creates the ngrams dataframe which contains: NGram name, frequency, and index (until
@@ -55,7 +55,6 @@ class NGrams():
             self.data = preprocess_df(self.data,
                                       self.text_field_key,
                                       language=language,
-                                      additional_list=additional_list,
                                       adhoc_stopwords=adhoc_stopwords,
                                       pos_tuples=pos_tuples)
             self.text_field_key = 'Preprocessed'
